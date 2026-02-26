@@ -1,0 +1,7 @@
+node_modules/
+cache/
+artifacts/
+ignition/
+coverage/
+typechain-types/
+.env
