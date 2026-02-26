@@ -5,6 +5,7 @@ async function main() {
   const [deployer] = await ethers.getSigners();
 
   const vault = await ethers.deployContract("CrediVault");
+  // Wait for mining so downstream scripts always receive a live address.
   await vault.waitForDeployment();
 
   console.log("Deployer:", deployer.address);

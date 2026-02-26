@@ -12,6 +12,7 @@ const [senderClient] = await viem.getWalletClients();
 
 console.log("Sending 1 wei from", senderClient.account.address, "to itself");
 
+// OP transactions include an L1 data fee, so estimate it before sending.
 const l1Gas = await publicClient.estimateL1Gas({
   account: senderClient.account.address,
   to: senderClient.account.address,
@@ -26,6 +27,7 @@ const tx = await senderClient.sendTransaction({
   value: 1n,
 });
 
+// Block until inclusion so script exits only after final confirmation.
 await publicClient.waitForTransactionReceipt({ hash: tx });
 
 console.log("Transaction sent successfully");

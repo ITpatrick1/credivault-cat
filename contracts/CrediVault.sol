@@ -46,7 +46,7 @@ contract CrediVault {
     // mapping requirement
     mapping(bytes32 => DebtCase) private cases;
 
-    // dynamic array requirement
+    // Keeps insertion order so off-chain systems can enumerate all case IDs.
     bytes32[] private caseIds;
 
     /*//////////////////////////////////////////////////////////////
@@ -64,6 +64,7 @@ contract CrediVault {
     //////////////////////////////////////////////////////////////*/
 
     constructor() {
+        // Bootstrap deployer as both owner and executor to avoid admin lockout.
         owner = msg.sender;
         executors[msg.sender] = true;
     }
@@ -81,6 +82,7 @@ contract CrediVault {
         external
         onlyOwner
     {
+        // debtor == address(0) is the sentinel for a non-existent case.
         require(cases[caseId].debtor == address(0), "CASE_EXISTS");
         require(debtor != address(0), "BAD_DEBTOR");
         require(amountDue > 0, "BAD_AMOUNT");
@@ -102,6 +104,7 @@ contract CrediVault {
         require(recipients.length == allocations.length, "LEN_MISMATCH");
         require(recipients.length > 0, "EMPTY");
 
+        // Allocation must represent an exact 100% split in basis points.
         uint256 total;
         for (uint256 i = 0; i < allocations.length; i++) {
             total += allocations[i];
@@ -130,6 +133,7 @@ contract CrediVault {
         require(msg.value > 0, "ZERO_VALUE");
         require(!dc.executed, "EXECUTED");
 
+        // Any address may contribute payment; sender is captured in the event log.
         dc.amountPaid += msg.value;
 
         emit Deposit(caseId, msg.sender, msg.value);
@@ -147,9 +151,11 @@ contract CrediVault {
         require(!dc.executed, "ALREADY_EXECUTED");
         require(dc.amountPaid > 0, "NO_FUNDS");
 
+        // Mark executed before external transfers (checks-effects-interactions).
         dc.executed = true;
 
         for (uint256 i = 0; i < dc.recipients.length; i++) {
+            // Integer division truncates; any remainder ("dust") stays in the contract.
             uint256 share = (dc.amountPaid * dc.allocations[i]) / 10000;
             payable(dc.recipients[i]).transfer(share);
         }

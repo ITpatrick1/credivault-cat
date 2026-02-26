@@ -5,12 +5,14 @@ const { ethers } = await network.connect();
 
 describe("CrediVault", function () {
   async function deployFixture() {
+    // Role ordering here mirrors business actors used across all test cases.
     const [owner, debtor, recipientA, recipientB, recipientC, executor, outsider] =
       await ethers.getSigners();
 
     const vault = await ethers.deployContract("CrediVault");
     await vault.waitForDeployment();
 
+    // Stable case id keeps expectations deterministic across runs.
     const caseId = ethers.id("INV-TEST-001");
     const amountDue = ethers.parseEther("1.0");
 
@@ -149,6 +151,7 @@ describe("CrediVault", function () {
       [7000, 2000, 1000],
     );
 
+    // Capture balances before payout to assert exact recipient deltas.
     const aBefore = await ethers.provider.getBalance(recipientA.address);
     const bBefore = await ethers.provider.getBalance(recipientB.address);
     const cBefore = await ethers.provider.getBalance(recipientC.address);

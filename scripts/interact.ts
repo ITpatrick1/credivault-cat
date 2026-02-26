@@ -12,6 +12,7 @@ async function main() {
   const [owner, debtor, recipientA, recipientB, recipientC, executor] =
     await ethers.getSigners();
 
+  // Reuse an existing deployment so this script can be rerun safely in any env.
   const vault = await ethers.getContractAt("CrediVault", contractAddress);
   const caseId = ethers.id("INV-2026-001");
   const amountDue = ethers.parseEther("1.0");
@@ -42,6 +43,7 @@ async function main() {
   await tx.wait();
   console.log("payInvoice tx:", tx.hash);
 
+  // Snapshot state immediately before payout to verify transition correctness.
   const before = await vault.getCase(caseId);
   console.log("Case before execute:", before);
   console.log("Contract balance before execute:", await vault.contractBalance());
@@ -54,6 +56,7 @@ async function main() {
   console.log("Case after execute:", after);
   console.log("Contract balance after execute:", await vault.contractBalance());
 
+  // Event queries double-check that the full lifecycle emitted expected logs.
   const depositEvents = await vault.queryFilter(vault.filters.Deposit(caseId));
   const allocationEvents = await vault.queryFilter(
     vault.filters.AllocationUpdated(caseId),
